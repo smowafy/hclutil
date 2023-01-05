@@ -31,6 +31,7 @@ type SNode struct {
   traversal hcl.Traversal
   parent *SNode
   children []*SNode
+  rng hcl.Range
 }
 
 func (s *SNode) CreateChild(n hclsyntax.Node, t hcl.Traversal) *SNode{
@@ -39,6 +40,7 @@ func (s *SNode) CreateChild(n hclsyntax.Node, t hcl.Traversal) *SNode{
     traversal: t,
     parent: s,
     children: []*SNode{},
+    rng: n.Range(),
   }
 
   s.children = append(s.children, c)
@@ -104,7 +106,7 @@ func (w *AstWalker) indexIncrement() {
   w.tupleIndexStack[len(w.tupleIndexStack) - 1]++
 }
 
-func (w *AstWalker) createChildAndPush(node hclsyntax.Node, tuple bool) {
+func (w *AstWalker) createChildAndPush(node hclsyntax.Node, tuple bool) *SNode {
   var idx int
   parent := w.parentPeek()
 
@@ -117,6 +119,8 @@ func (w *AstWalker) createChildAndPush(node hclsyntax.Node, tuple bool) {
   t := BuildTraversalForNode(parent.traversal, node, tuple, idx)
   sn := parent.CreateChild(node, t)
   w.parentPush(sn)
+
+  return sn
 }
 
 
@@ -131,14 +135,16 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
     w.modePush(ModeNone)
 
   case ModeTopLevel:
-    switch node.(type) {
+    switch n := node.(type) {
     case *hclsyntax.Body, hclsyntax.Blocks, hclsyntax.Attributes:
       w.modePush(ModeTopLevel)
     case *hclsyntax.Block:
-      w.createChildAndPush(node, false)
+      sn := w.createChildAndPush(node, false)
+      sn.rng = n.Body.Range()
       w.modePush(ModeTopLevel)
     case *hclsyntax.Attribute:
-      w.createChildAndPush(node, false)
+      sn := w.createChildAndPush(node, false)
+      sn.rng = n.Expr.Range()
       w.modePush(ModeTopLevel)
     case *hclsyntax.ObjectConsExpr:
       w.modePush(ModeObj)
@@ -162,6 +168,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
     switch node.(type) {
     case *hclsyntax.TupleConsExpr:
       parent.node = node // populate node reference with the value expression node
+      parent.rng = node.Range()
       w.modePush(ModeTupleVal)
       w.indexPush(0)
     case *hclsyntax.ObjectConsExpr:
@@ -178,6 +185,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
       w.modePush(ModeNone)
     default:
       parent.node = node // populate node reference with the value expression node
+      parent.rng = node.Range()
       // w.createChildAndPush(node, false)
       w.modePush(ModeNone)
     }

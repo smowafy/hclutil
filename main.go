@@ -49,7 +49,7 @@ func main() {
   res := Query(rootNode, inp)
 
   if res != nil {
-    r := res.node.Range()
+    r := res.rng
     s := r.Start.Byte
     e := r.End.Byte
     fmt.Printf("%v\n", string(srcBytes[s:e]))
