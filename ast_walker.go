@@ -1,18 +1,9 @@
 package main
 
 import(
-  "fmt"
   "github.com/hashicorp/hcl/v2"
   "github.com/hashicorp/hcl/v2/hclsyntax"
 )
-
-func psn(a []*SNode) string {
-  s := ""
-  for _, n := range a {
-    s += fmt.Sprintf(" %T", n.node)
-  }
-  return s
-}
 
 type Mode int
 
@@ -128,8 +119,6 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
   parent := w.parentPeek()
   mode := w.modePeek()
 
-  fmt.Printf("ENTER\nnode: %T\nmode: %v\nparentStack: %v\nparent traversal: %v\nmode stack: %v\n\n\n", node, mode, FormatParentStack(w.parentStack), FormatTraversal(parent.traversal), w.modeStack)
-
   switch mode{
   case ModeNone:
     w.modePush(ModeNone)
@@ -215,10 +204,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 }
 
 func (w *AstWalker) Exit(node hclsyntax.Node) hcl.Diagnostics {
-  parent := w.parentPeek()
   mode := w.modePeek()
-
-  fmt.Printf("EXIT\nnode: %T\nmode: %v\nparentStack: %v\nparent traversal: %v\nmode stack: %v\n\n\n", node, mode, FormatParentStack(w.parentStack), FormatTraversal(parent.traversal), w.modeStack)
 
   switch mode {
   case ModeNone:

@@ -8,6 +8,15 @@ import(
 //  "github.com/hashicorp/hcl/v2/hclsyntax"
 )
 
+func psn(a []*SNode) string {
+  s := ""
+  for _, n := range a {
+    s += fmt.Sprintf(" %T", n.node)
+  }
+  return s
+}
+
+
 func FormatParentStack(st []*SNode) string {
   s := ""
 

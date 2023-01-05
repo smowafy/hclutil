@@ -10,7 +10,8 @@ import(
 )
 
 func main() {
-  traversalInput := os.Args[1]
+  filePath := os.Args[1]
+  traversalInput := os.Args[2]
 
   inp, diags := hclsyntax.ParseTraversalAbs([]byte(traversalInput), "dummy.hcl", hcl.Pos{ Line: 1, Column: 1 })
 
@@ -18,13 +19,13 @@ func main() {
     panic(diags)
   }
 
-  srcBytes, err := os.ReadFile("dest.hcl")
+  srcBytes, err := os.ReadFile(filePath)
 
   if err != nil {
     panic(err)
   }
 
-  srcFile, diags := hclsyntax.ParseConfig(srcBytes, "dest.hcl", hcl.Pos{ Line: 1, Column: 1, Byte: 0 })
+  srcFile, diags := hclsyntax.ParseConfig(srcBytes, "placeholder.hcl", hcl.Pos{ Line: 1, Column: 1, Byte: 0 })
 
   if diags.HasErrors() {
     panic(diags)
@@ -44,7 +45,7 @@ func main() {
 
   hclsyntax.Walk(srcBody, &w)
 
-  WalkSNode(rootNode)
+//  WalkSNode(rootNode)
 
   res := Query(rootNode, inp)
 
