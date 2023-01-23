@@ -168,7 +168,6 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
       w.modePop()
 
       w.parentPop()
-//      parent = w.parentPeek()
 
       w.createChildAndPush(node, false)
       w.modePush(ModeNone)
