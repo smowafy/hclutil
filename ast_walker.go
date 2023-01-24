@@ -3,6 +3,7 @@ package main
 import(
   "github.com/hashicorp/hcl/v2"
   "github.com/hashicorp/hcl/v2/hclsyntax"
+//  "fmt"
 )
 
 type Mode int
@@ -119,6 +120,8 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
   parent := w.parentPeek()
   mode := w.modePeek()
 
+  //fmt.Printf("ENTER\nnode: %T\nmode: %v\nparentStack: %v\nparent traversal: %v\nmode stack: %v\n\n\n", node, mode, FormatParentStack(w.parentStack), FormatTraversal(parent.traversal), w.modeStack)
+
   switch mode{
   case ModeNone:
     w.modePush(ModeNone)
@@ -163,6 +166,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
     case *hclsyntax.ObjectConsExpr:
       // w.createChildAndPush(node, false)
       parent.node = node
+      parent.rng = node.Range()
       w.modePush(ModeObj)
     case *hclsyntax.ObjectConsKeyExpr:
       w.modePop()
@@ -204,6 +208,9 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
 
 func (w *AstWalker) Exit(node hclsyntax.Node) hcl.Diagnostics {
   mode := w.modePeek()
+  //parent := w.parentPeek()
+
+  //fmt.Printf("EXIT\nnode: %T\nmode: %v\nparentStack: %v\nparent traversal: %v\nmode stack: %v\n\n\n", node, mode, FormatParentStack(w.parentStack), FormatTraversal(parent.traversal), w.modeStack)
 
   switch mode {
   case ModeNone:
@@ -283,8 +290,9 @@ func (w *AstWalker) Exit(node hclsyntax.Node) hcl.Diagnostics {
     case *hclsyntax.Body, *hclsyntax.Block, *hclsyntax.Attribute, hclsyntax.Blocks, hclsyntax.Attributes, *hclsyntax.ObjectConsKeyExpr:
       panic("unexpected case")
     case *hclsyntax.ObjectConsExpr:
-      w.parentPop()
       w.modePop()
+      // w.parentPop()
+      
       if w.modePeek() == ModeTupleVal {
         w.parentPop()
         w.modePop()

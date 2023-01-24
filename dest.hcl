@@ -1,5 +1,12 @@
 # #comment two
 # 
+
+locals {
+  hsh = {
+    "first" = {}
+    "second" = {}
+  }
+}
 locals {
   ecs_cluster_settings = {
     "cluster_name" = data.terraform_remote_state.network.outputs.project.name
