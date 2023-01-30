@@ -22,6 +22,11 @@ func Find(root *SNode, inputTraversal hcl.Traversal, inpFile []byte) {
 }
 
 func Replace(root *SNode, inputTraversal hcl.Traversal, inpFile []byte, val []byte) {
+  if string(val) == "" || string(val) == "\n" {
+    fmt.Printf("%v\n", string(inpFile))
+    return
+  }
+
   res := Query(root, inputTraversal)
 
   if res != nil {
@@ -36,6 +41,8 @@ func Replace(root *SNode, inputTraversal hcl.Traversal, inpFile []byte, val []by
     newFile = append(newFile, inpFile[e:]...)
 
     fmt.Printf("%v\n", string(newFile))
+  } else {
+    fmt.Printf("%v\n", string(inpFile))
   }
 }
 

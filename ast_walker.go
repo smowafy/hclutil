@@ -16,6 +16,8 @@ const (
   ModeObjVal
 
   ModeTupleVal
+
+  ModeObjKey
 )
 
 type SNode struct {
@@ -151,7 +153,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
     switch node.(type) {
     case *hclsyntax.ObjectConsKeyExpr:
       w.createChildAndPush(node, false) // for creating the traversal
-      w.modePush(ModeNone) // ignore the subtree of the key
+      w.modePush(ModeObjKey) // ignore the subtree of the key
     default:
       panic("unexpected case")
     }
@@ -174,7 +176,7 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
       w.parentPop()
 
       w.createChildAndPush(node, false)
-      w.modePush(ModeNone)
+      w.modePush(ModeObjKey)
     default:
       parent.node = node // populate node reference with the value expression node
       parent.rng = node.Range()
@@ -201,6 +203,9 @@ func (w *AstWalker) Enter(node hclsyntax.Node) hcl.Diagnostics {
       w.indexIncrement()
       w.modePush(ModeNone)
     }
+
+  case ModeObjKey:
+    w.modePush(ModeObjKey)
   }
 
   return nil
@@ -213,16 +218,19 @@ func (w *AstWalker) Exit(node hclsyntax.Node) hcl.Diagnostics {
   //fmt.Printf("EXIT\nnode: %T\nmode: %v\nparentStack: %v\nparent traversal: %v\nmode stack: %v\n\n\n", node, mode, FormatParentStack(w.parentStack), FormatTraversal(parent.traversal), w.modeStack)
 
   switch mode {
-  case ModeNone:
+  case ModeObjKey:
     switch node.(type) {
       case *hclsyntax.ObjectConsKeyExpr:
         w.modePop()
         w.modePush(ModeObjVal)
       default:
         w.modePop()
-        if w.modePeek() == ModeTupleVal {
-          w.parentPop()
-        }
+    }
+
+  case ModeNone:
+    w.modePop()
+    if w.modePeek() == ModeTupleVal {
+      w.parentPop()
     }
 
   case ModeTopLevel:
